@@ -8,7 +8,8 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     DB_NAME: ${opt:db_name}
-    DB_SECURITY_GROUP_ID: ${opt:security_group_id}
+    DB_SECURITY_GROUP_ID: ${opt:db_security_group_id}
+    LAMBDA_SECURITY_GROUP_ID: ${opt:lambda_security_group_id}
     DB_SUBNET_GROUP_NAME: ${opt:subnet_group_name}
     STAGE: ${opt:stage}
   iamRoleStatements:

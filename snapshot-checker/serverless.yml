@@ -24,7 +24,7 @@ provider:
           - 'secret:${opt:stage}/${opt:service}-service/rdscredential-*'
   vpc:
       securityGroupIds:
-        - Ref SecurityGroup
+        - !Ref SecurityGroup
       subnetIds:
         - ${opt:subnet_az1}
         - ${opt:subnet_az2}
@@ -34,7 +34,8 @@ functions:
   main:
     handler: handler.do
     events:
-      - sns: rds-events-dispatcher  
+      - sns: rds-events-dispatcher
+    timeout: 120  
 
 package:
   exclude:

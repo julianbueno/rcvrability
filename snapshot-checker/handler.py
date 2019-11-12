@@ -15,9 +15,7 @@ def get_db_password(stage,service):
     get_secret_value_response = client.get_secret_value(SecretId=secret_id)
     secret = get_secret_value_response['SecretString']
     json_secret = json.loads(secret)
-    # print(f"json_secret:{json_secret}")
     password = json_secret["password"]
-    # print(f"password:{password}")
     return password
 
 def connect_to_db_and_query(stage, service, target_db, endpoint_suffix):
@@ -30,31 +28,33 @@ def connect_to_db_and_query(stage, service, target_db, endpoint_suffix):
         cur = conn.cursor()
         print(f"Executing *** {query} *** in database:{host}")
         cur.execute(query)
-        cur.close()
+        rows = cur.fetchall()
+        print(f"rowcount: {cur.rowcount}")
+        for row in rows:
+            print(row)
+        cur.close()   
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(f"DatabaseError:{error}")    
     except:
-        print("Error:", sys.exc_info()[0])
-
-    conn.close()    
+        print(f"Error:{sys.exc_info()[0]}")
+    finally:
+        if conn is not None:
+            conn.close()
 
 def listen_to_events(event, dbname, endpoint_suffix, stage, service):
     date = datetime.now().strftime("%Y-%m-%d")
     target_db = f"{dbname}-rcvred-{date}"
     try:
-        # print(event)
         message_json = event["Records"][0]["Sns"]["Message"]
-        # print(message_json)
-        # pprint.pprint(message_json)
         message_dict = json.loads(message_json)
         event_id = message_dict["Event ID"]
-        print(event_id)
         source_id = message_dict["Source ID"]
-        print(source_id)
 
         if event_id == EventID and source_id == target_db:
            print(f"db:{target_db} is ready") 
            connect_to_db_and_query(stage, service, target_db, endpoint_suffix)
     except:
-        print("Error:", sys.exc_info()[0])
+        print(f"Error:{sys.exc_info()[0]}")
 
 def do(event, context):
     
