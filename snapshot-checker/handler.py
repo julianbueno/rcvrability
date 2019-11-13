@@ -19,12 +19,17 @@ def get_db_password(stage,service):
     return password
 
 def connect_to_db_and_query(stage, service, target_db, endpoint_suffix):
-    pwd = get_db_password(stage,service)
-    host = f"{target_db}{endpoint_suffix}"
-    conn = psycopg2.connect(f"host={host} dbname={service} user={service}-service password={pwd} connect_timeout=10 options='-c statement_timeout=5000'") 
-    conn.autocommit = True
     query = "SELECT nspname AS schemaname,relname,reltuples FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) WHERE nspname NOT IN ('pg_catalog', 'information_schema') AND relkind='r' ORDER BY reltuples DESC;"
+    pwd = get_db_password(stage,service)
+    print(f"password:{pwd}")
+    host = f"{target_db}{endpoint_suffix}"
+    print(f"host:{host}")
+    conn_str = f"host={host} dbname={service} user={service}-service password={pwd} connect_timeout=10 options='-c statement_timeout=5000'"
+    print(f"conn str:{conn_str}")
+    
     try:
+        conn = psycopg2.connect(conn_str) 
+        conn.autocommit = True
         cur = conn.cursor()
         print(f"Executing *** {query} *** in database:{host}")
         cur.execute(query)
@@ -34,7 +39,9 @@ def connect_to_db_and_query(stage, service, target_db, endpoint_suffix):
             print(row)
         cur.close()   
     except (Exception, psycopg2.DatabaseError) as error:
-        print(f"DatabaseError:{error}")    
+        print(f"DatabaseError:{error}")  
+    except (Exception, psycopg2.Error) as error :
+        print("Error while fetching data from PostgreSQL", error)      
     except:
         print(f"Error:{sys.exc_info()[0]}")
     finally:
