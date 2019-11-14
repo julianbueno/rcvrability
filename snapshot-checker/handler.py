@@ -48,6 +48,22 @@ def connect_to_db_and_query(stage, service, target_db, endpoint_suffix):
         if conn is not None:
             conn.close()
 
+def delete_db_instance(dbname):
+    date = datetime.now().strftime("%Y-%m-%d")
+    target_db = f"{dbname}-rcvred-{date}"
+
+    session = boto3.session.Session()
+    client = session.client(service_name='rds',region_name='ap-southeast-2')
+    try:
+        response = client.delete_db_instance(DBInstanceIdentifier=target_db, SkipFinalSnapshot=True, DeleteAutomatedBackups=True)
+        restored_db_snapshot =  response["DBInstance"]["DBInstanceIdentifier"]
+        print(f"db:{restored_db_snapshot} is being deleted")
+
+    except:
+         print(f"Error: {sys.exc_info()[0]}")
+    
+
+
 def listen_to_events(event, dbname, endpoint_suffix, stage, service):
     date = datetime.now().strftime("%Y-%m-%d")
     target_db = f"{dbname}-rcvred-{date}"
@@ -60,6 +76,7 @@ def listen_to_events(event, dbname, endpoint_suffix, stage, service):
         if event_id == EventID and source_id == target_db:
            print(f"db:{target_db} is ready") 
            connect_to_db_and_query(stage, service, target_db, endpoint_suffix)
+           delete_db_instance(dbname)
     except:
         print(f"Error:{sys.exc_info()[0]}")
 

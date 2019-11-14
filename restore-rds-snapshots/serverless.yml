@@ -12,19 +12,7 @@ provider:
     LAMBDA_SECURITY_GROUP_ID: ${opt:lambda_security_group_id}
     DB_SUBNET_GROUP_NAME: ${opt:subnet_group_name}
     STAGE: ${opt:stage}
-  iamRoleStatements:
-   - Effect: "Allow"
-     Action: 
-       - rds:RestoreDBInstanceToPointInTime
-       - rds:CreateEventSubscription
-       - rds:DescribeEventSubscriptions
-       - rds:DeleteEventSubscription
-     Resource: "*" 
-   - Effect: "Allow"
-     Action: 
-       - kms:DescribeKey
-       - kms:CreateGrant
-     Resource: "*"    
+  role: LambdaIamRole
 
 functions:
   main:
@@ -32,6 +20,40 @@ functions:
     events:
       - schedule: cron(0 22 * * ? *)
         enabled: false
+
+resources:
+  Resources:
+    LambdaIamRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: restore-rds-snapshots-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: restore-rds-snapshots-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:  
+                 - Effect: "Allow"
+                   Action: 
+                     - rds:RestoreDBInstanceToPointInTime
+                     - rds:CreateEventSubscription
+                     - rds:DescribeEventSubscriptions
+                     - rds:DeleteEventSubscription
+                   Resource: "*" 
+                 - Effect: "Allow"
+                   Action: 
+                     - kms:DescribeKey
+                     - kms:CreateGrant
+                   Resource: "*" 
 
 package:
   exclude:
