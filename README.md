@@ -25,6 +25,4 @@ https://stackoverflow.com/questions/52648986/conn-configuration-for-aws-lambda-p
 
 https://aws.amazon.com/blogs/database/iam-role-based-authentication-to-amazon-aurora-from-serverless-applications/
 
-https://www.periscopedata.com/blog/exact-row-counts-for-every-database-table
-
 https://gist.github.com/hugorodgerbrown/5084022

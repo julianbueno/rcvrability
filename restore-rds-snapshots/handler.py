@@ -4,7 +4,7 @@ import boto3
 import pprint
 from datetime import datetime
 
-def restore_snapshot(dbname,sg,subnet_group):
+def restore_snapshot(dbname, db_sg, lambda_sg, subnet_group):
     date = datetime.now().strftime("%Y-%m-%d")
     target_db = f"{dbname}-rcvred-{date}"
 
@@ -18,7 +18,8 @@ def restore_snapshot(dbname,sg,subnet_group):
         CopyTagsToSnapshot=True,
         MultiAZ=False,
         VpcSecurityGroupIds=[
-            sg
+            db_sg,
+            lambda_sg
         ],
         DBSubnetGroupName=subnet_group
         )
@@ -26,7 +27,7 @@ def restore_snapshot(dbname,sg,subnet_group):
         restored_db_snapshot =  response["DBInstance"]["DBInstanceIdentifier"]
         print(f"db:{restored_db_snapshot} is being restored")
     except:
-        print("Error:", sys.exc_info()[0])
+        print(f"Error: {sys.exc_info()[0]}")
         response = {"DBInstance": {"DBInstanceIdentifier": target_db, "DBInstanceStatus": "exists" }}   
 
     return response
@@ -86,11 +87,12 @@ def delete_event_subscription():
 
 def restore(event, context):
     dbname = os.environ["DB_NAME"]
-    sg = os.environ["DB_SECURITY_GROUP_ID"]
+    db_sg = os.environ["DB_SECURITY_GROUP_ID"]
+    lambda_sg = os.environ["LAMBDA_SECURITY_GROUP_ID"]
     subnet_group = os.environ["DB_SUBNET_GROUP_NAME"]
     stage = os.environ["STAGE"]
 
-    restore_snapshot(dbname,sg, subnet_group)
+    restore_snapshot(dbname, db_sg, lambda_sg, subnet_group)
     
     if subscription_exists():
        delete_event_subscription()
