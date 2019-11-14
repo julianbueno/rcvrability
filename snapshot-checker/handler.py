@@ -24,7 +24,7 @@ def connect_to_db_and_query(stage, service, target_db, endpoint_suffix):
     print(f"password:{pwd}")
     host = f"{target_db}{endpoint_suffix}"
     print(f"host:{host}")
-    conn_str = f"host={host} dbname={service} user={service}-service password={pwd} connect_timeout=10 options='-c statement_timeout=5000'"
+    conn_str = f"host={host} dbname={service} user={service}-service password={pwd} connect_timeout=120 options='-c statement_timeout=5000'"
     print(f"conn str:{conn_str}")
     
     try:
